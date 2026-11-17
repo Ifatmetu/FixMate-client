@@ -1,5 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google"
-
+import { Toaster } from "react-hot-toast"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils";
@@ -27,6 +27,13 @@ export default function RootLayout({
         <ThemeProvider>
           <Navbar />
           {children}
+
+          <Toaster
+    position="top-right"
+    toastOptions={{
+      duration: 3000,
+    }}
+  />
         </ThemeProvider>
       </body>
     </html>

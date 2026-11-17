@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth"
 import { mongodbAdapter } from "@better-auth/mongo-adapter"
 import { MongoClient } from "mongodb"
 
-const client = new MongoClient("mongodb://localhost:27017/database")
+const client = new MongoClient(process.env.BETTER_AUTH_DB_URL as string)
 const db = client.db("FixMate")
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID
