@@ -2,27 +2,40 @@ import { betterAuth } from "better-auth"
 import { mongodbAdapter } from "@better-auth/mongo-adapter"
 import { MongoClient } from "mongodb"
 
-const client = new MongoClient(process.env.BETTER_AUTH_DB_URL as string)
+const mongoUrl = process.env.BETTER_AUTH_DB_URL
+
+if (!mongoUrl) {
+  throw new Error("BETTER_AUTH_DB_URL is not defined")
+}
+
+const baseURL = process.env.NEXT_PUBLIC_BETTER_AUTH_URL
+
+if (!baseURL) {
+  throw new Error("NEXT_PUBLIC_BETTER_AUTH_URL is not defined")
+}
+
+const client = new MongoClient(mongoUrl)
+
 const db = client.db("FixMate")
 
-const googleClientId = process.env.GOOGLE_CLIENT_ID
-const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET
-
 export const auth = betterAuth({
+  baseURL,
   database: mongodbAdapter(db, {
     client,
   }),
+
   emailAndPassword: {
     enabled: true,
   },
-  ...(googleClientId && googleClientSecret
-    ? {
-        socialProviders: {
+
+  socialProviders:
+    process.env.GOOGLE_CLIENT_ID &&
+    process.env.GOOGLE_CLIENT_SECRET
+      ? {
           google: {
-            clientId: googleClientId,
-            clientSecret: googleClientSecret,
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
           },
-        },
-      }
-    : {}),
+        }
+      : undefined,
 })
