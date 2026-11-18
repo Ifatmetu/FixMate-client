@@ -8,10 +8,11 @@ if (!mongoUrl) {
   throw new Error("BETTER_AUTH_DB_URL is not defined")
 }
 
-const baseURL = process.env.NEXT_PUBLIC_BETTER_AUTH_URL
+const baseURL =
+  process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_BETTER_AUTH_URL
 
 if (!baseURL) {
-  throw new Error("NEXT_PUBLIC_BETTER_AUTH_URL is not defined")
+  throw new Error("BETTER_AUTH_URL is not defined")
 }
 
 const client = new MongoClient(mongoUrl)
@@ -28,9 +29,28 @@ export const auth = betterAuth({
     enabled: true,
   },
 
+  user: {
+    additionalFields: {
+      role: {
+        type: ["admin", "customer", "technician"],
+        input: true,
+        defaultValue: "customer",
+      },
+      phone: {
+        type: "string",
+        input: true,
+        required: false,
+      },
+      area: {
+        type: "string",
+        input: true,
+        required: false,
+      },
+    },
+  },
+
   socialProviders:
-    process.env.GOOGLE_CLIENT_ID &&
-    process.env.GOOGLE_CLIENT_SECRET
+    process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? {
           google: {
             clientId: process.env.GOOGLE_CLIENT_ID,

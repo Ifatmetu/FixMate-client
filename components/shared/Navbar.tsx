@@ -1,6 +1,9 @@
-import Link from "next/link"
-import { Wrench } from "lucide-react"
+"use client"
 
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Wrench } from "lucide-react"
+import UserMenu from "./UserMenu"
 import MobileMenu from "./MobileMenu"
 import ThemeToggle from "./ThemeToggle"
 
@@ -20,6 +23,12 @@ const navLinks = [
 ]
 
 export default function Navbar() {
+  const pathname = usePathname()
+
+  if (pathname.startsWith("/dashboard")) {
+    return null
+  }
+
   return (
     <header className="sticky top-0 z-50 border-b bg-background">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -52,19 +61,7 @@ export default function Navbar() {
         <div className="hidden items-center gap-3 md:flex">
           <ThemeToggle />
 
-          <Link
-            href="/sign-in"
-            className="rounded-lg px-4 py-2 text-sm font-medium text-[#1D4ED8] transition-colors hover:bg-blue-50 dark:hover:bg-blue-950/40"
-          >
-            Sign In
-          </Link>
-
-          <Link
-            href="/sign-up"
-            className="rounded-lg bg-[#F97316] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-[#EA580C]"
-          >
-            Sign Up
-          </Link>
+          <UserMenu />
         </div>
 
         {/* Mobile Menu */}

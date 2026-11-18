@@ -72,19 +72,13 @@ export default function SignUpPage() {
     setIsLoading(true)
 
     try {
-      /*
-       * Better Auth standard signup fields:
-       * name, email, password, image, callbackURL
-       *
-       * Do NOT put phone, area or role inside this object
-       * until your Better Auth server is configured to accept
-       * custom fields.
-       */
-      const { data, error } = await authClient.signUp.email({
-        name,
-        email,
+      const { error } = await authClient.signUp.email({
+        name: name.trim(),
+        email: email.trim(),
         password,
-        image: "",
+        phone: phone.trim(),
+        area: area.trim(),
+        role,
         callbackURL: "/",
       })
 
@@ -93,21 +87,9 @@ export default function SignUpPage() {
         return
       }
 
-      console.log("Signup successful:", data)
-
-      /*
-       * IMPORTANT:
-       *
-       * The account is created here, but phone/area/role
-       * still need to be saved through your custom user-field
-       * configuration/API.
-       *
-       * We will connect that after checking your lib/auth.ts.
-       */
-
       toast.success("Account created successfully!")
 
-      router.push("/sign-in")
+      router.push("/")
       router.refresh()
     } catch (error) {
       console.error("Sign up error:", error)
