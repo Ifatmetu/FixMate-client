@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   Wrench,
@@ -11,6 +11,7 @@ import {
   Image as ImageIcon,
   ArrowLeft,
 } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import toast from "react-hot-toast"
 
@@ -32,17 +33,24 @@ export default function AddServicePage() {
   const router = useRouter()
 
   const [loading, setLoading] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState("")
 
   const [formData, setFormData] = useState({
     title: "",
     category: "",
     description: "",
-    image: "",
     serviceMode: "Home Service",
     serviceArea: "",
     price: "",
     availability: "available",
   })
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview)
+    }
+  }, [imagePreview])
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -71,21 +79,25 @@ export default function AddServicePage() {
       return
     }
 
+    if (!imageFile) {
+      toast.error("Please select a service image")
+      return
+    }
+
     try {
       setLoading(true)
 
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000"
-        }/services`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      )
+      const payload = new FormData()
+
+      Object.entries(formData).forEach(([key, value]) => {
+        payload.append(key, value)
+      })
+      payload.append("image", imageFile)
+
+      const response = await fetch("/api/server/services", {
+        method: "POST",
+        body: payload,
+      })
 
       const result = await response.json()
 
@@ -100,7 +112,11 @@ export default function AddServicePage() {
     } catch (error) {
       console.error("Failed to add service:", error)
       toast.error(
-        error instanceof Error ? error.message : "Failed to add service"
+        error instanceof TypeError
+          ? "Cannot reach the API server. Make sure the backend is running."
+          : error instanceof Error
+            ? error.message
+            : "Failed to add service"
       )
     } finally {
       setLoading(false)
@@ -336,29 +352,52 @@ export default function AddServicePage() {
                   className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                   <ImageIcon className="h-4 w-4" />
-                  Image URL
+                  Service Image
                 </label>
 
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <div className="relative flex-1">
-                    <Upload className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <div>
+                  <input
+                    id="image"
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
 
-                    <input
-                      id="image"
-                      name="image"
-                      type="url"
-                      value={formData.image}
-                      onChange={handleChange}
-                      placeholder="https://example.com/service-image.jpg"
-                      className="w-full rounded-lg border border-gray-300 bg-white py-3 pl-10 pr-4 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-950"
-                    />
-                  </div>
+                      if (!file) return
+
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast.error("Image must be less than 5MB")
+                        return
+                      }
+
+                      if (imagePreview) {
+                        URL.revokeObjectURL(imagePreview)
+                      }
+
+                      setImageFile(file)
+                      setImagePreview(URL.createObjectURL(file))
+                    }}
+                    className="block w-full cursor-pointer rounded-lg border border-gray-300 bg-white text-sm text-gray-600 file:mr-4 file:border-0 file:bg-blue-600 file:px-4 file:py-3 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-300"
+                  />
+
+                  {imagePreview && (
+                    <div className="mt-4">
+                      <Image
+                        src={imagePreview}
+                        alt="Service preview"
+                        width={600}
+                        height={192}
+                        unoptimized
+                        className="h-48 w-full rounded-lg object-cover"
+                      />
+                    </div>
+                  )}
+
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    JPG, PNG or WEBP. Maximum size 5MB. Images are hosted on
+                    ImgBB.
+                  </p>
                 </div>
-
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  Later we can connect this field with ImgBB for image
-                  uploading.
-                </p>
               </div>
             </div>
 
@@ -377,11 +416,10 @@ export default function AddServicePage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <label
-                  className={`cursor-pointer rounded-xl border p-4 transition ${
-                    formData.availability === "available"
+                  className={`cursor-pointer rounded-xl border p-4 transition ${formData.availability === "available"
                       ? "border-blue-600 bg-blue-50 dark:border-blue-500 dark:bg-blue-950/30"
                       : "border-gray-300 hover:border-blue-300 dark:border-gray-700"
-                  }`}
+                    }`}
                 >
                   <input
                     type="radio"
@@ -394,11 +432,10 @@ export default function AddServicePage() {
 
                   <div className="flex items-center gap-3">
                     <div
-                      className={`h-4 w-4 rounded-full border-2 ${
-                        formData.availability === "available"
+                      className={`h-4 w-4 rounded-full border-2 ${formData.availability === "available"
                           ? "border-blue-600 bg-blue-600"
                           : "border-gray-400"
-                      }`}
+                        }`}
                     />
 
                     <div>
@@ -414,11 +451,10 @@ export default function AddServicePage() {
                 </label>
 
                 <label
-                  className={`cursor-pointer rounded-xl border p-4 transition ${
-                    formData.availability === "unavailable"
+                  className={`cursor-pointer rounded-xl border p-4 transition ${formData.availability === "unavailable"
                       ? "border-orange-500 bg-orange-50 dark:border-orange-500 dark:bg-orange-950/20"
                       : "border-gray-300 hover:border-orange-300 dark:border-gray-700"
-                  }`}
+                    }`}
                 >
                   <input
                     type="radio"
@@ -431,11 +467,10 @@ export default function AddServicePage() {
 
                   <div className="flex items-center gap-3">
                     <div
-                      className={`h-4 w-4 rounded-full border-2 ${
-                        formData.availability === "unavailable"
+                      className={`h-4 w-4 rounded-full border-2 ${formData.availability === "unavailable"
                           ? "border-orange-500 bg-orange-500"
                           : "border-gray-400"
-                      }`}
+                        }`}
                     />
 
                     <div>
