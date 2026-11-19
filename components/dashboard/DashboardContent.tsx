@@ -81,3 +81,29 @@ export function EmptyState({
     </div>
   )
 }
+
+export function SectionPage({
+  title,
+  description,
+  icon,
+  emptyTitle = "Nothing here yet",
+  emptyDescription = "This section will display data once it is connected.",
+}: {
+  title: string
+  description: string
+  icon: LucideIcon
+  emptyTitle?: string
+  emptyDescription?: string
+}) {
+  return (
+    <>
+      <PageHeader title={title} description={description} />
+
+      <EmptyState
+        icon={icon}
+        title={emptyTitle}
+        description={emptyDescription}
+      />
+    </>
+  )
+}
