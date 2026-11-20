@@ -1,5 +1,9 @@
-import 'server-only'
+import Stripe from "stripe"
 
-import Stripe from 'stripe'
+const secretKey = process.env.STRIPE_SECRET_KEY
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {)
+if (!secretKey) {
+  throw new Error("STRIPE_SECRET_KEY is not set")
+}
+
+export const stripe = new Stripe(secretKey)

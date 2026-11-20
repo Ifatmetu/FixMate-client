@@ -17,7 +17,8 @@ export default function CustomerBookingsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
   const [payingId, setPayingId] = useState("")
-  const [reloadKey, setReloadKey] = useState(0)
+  const [activePaymentId, setActivePaymentId] = useState("")
+  const [paymentReference, setPaymentReference] = useState("")
 
   useEffect(() => {
     const loadBookings = async () => {
@@ -37,38 +38,51 @@ export default function CustomerBookingsPage() {
         setBookings(Array.isArray(data) ? data : [])
         setError("")
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to load bookings"
-        )
+        setError(err instanceof Error ? err.message : "Failed to load bookings")
       } finally {
         setIsLoading(false)
       }
     }
 
     loadBookings()
-  }, [reloadKey])
+  }, [])
 
-  const payNow = async (id: string) => {
+  const confirmManualPayment = async (id: string) => {
     try {
       setPayingId(id)
 
       const response = await fetch(`/api/customer/bookings/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "pay" }),
+        body: JSON.stringify({
+          action: "pay",
+          method: "manual",
+          reference: paymentReference,
+        }),
       })
 
       const result = await response.json().catch(() => ({}))
 
-      if (!response.ok) {
-        throw new Error(result?.message ?? "Failed to record payment")
+      if (!response.ok && response.status !== 409) {
+        throw new Error(result?.message ?? "Failed to confirm payment")
       }
 
-      toast.success("Payment successful")
-      setReloadKey((key) => key + 1)
+      setBookings((current) =>
+        current.map((booking) =>
+          booking._id === id ? { ...booking, status: "paid" } : booking
+        )
+      )
+      setActivePaymentId("")
+      setPaymentReference("")
+
+      toast.success(
+        response.status === 409
+          ? "This payment was already recorded"
+          : "Payment confirmed. Your technician has been notified."
+      )
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to record payment"
+        err instanceof Error ? err.message : "Failed to confirm payment"
       )
     } finally {
       setPayingId("")
@@ -100,9 +114,7 @@ export default function CustomerBookingsPage() {
             const status = booking.status ?? "pending"
             const isBusy = payingId === booking._id
             const message =
-              typeof booking.message === "string"
-                ? booking.message.trim()
-                : ""
+              typeof booking.message === "string" ? booking.message.trim() : ""
 
             return (
               <div
@@ -112,11 +124,7 @@ export default function CustomerBookingsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h2 className="font-semibold text-gray-900 dark:text-white">
-                      {pickField(booking, [
-                        "serviceTitle",
-                        "title",
-                        "service",
-                      ])}
+                      {pickField(booking, ["serviceTitle", "title", "service"])}
                     </h2>
 
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -163,15 +171,66 @@ export default function CustomerBookingsPage() {
                 )}
 
                 {status === "accepted" && (
-                  <button
-                    type="button"
-                    disabled={isBusy}
-                    onClick={() => payNow(booking._id)}
-                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    {isBusy ? "Processing..." : "Pay Now"}
-                  </button>
+                  <div className="mt-4">
+                    {activePaymentId !== booking._id ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActivePaymentId(booking._id)
+                          setPaymentReference("")
+                        }}
+                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                      >
+                        <CreditCard className="h-4 w-4" />
+                        Pay Now
+                      </button>
+                    ) : (
+                      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950/30">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          Pay {formatCurrency(booking.servicePrice)} via bKash
+                          or cash
+                        </p>
+
+                        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                          Send the exact amount to your technician, then confirm
+                          below.
+                        </p>
+
+                        <input
+                          type="text"
+                          value={paymentReference}
+                          onChange={(event) =>
+                            setPaymentReference(event.target.value)
+                          }
+                          placeholder="bKash TrxID (optional)"
+                          className="mt-3 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+                        />
+
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            disabled={isBusy}
+                            onClick={() => confirmManualPayment(booking._id)}
+                            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {isBusy ? "Confirming..." : "I have paid"}
+                          </button>
+
+                          <button
+                            type="button"
+                            disabled={isBusy}
+                            onClick={() => {
+                              setActivePaymentId("")
+                              setPaymentReference("")
+                            }}
+                            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {status === "paid" && (

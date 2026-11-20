@@ -83,6 +83,11 @@ export default function AddServicePage() {
       return
     }
 
+    if (Number(formData.price) <= 0) {
+      toast.error("Starting price must be greater than ৳0")
+      return
+    }
+
     if (!imageFile) {
       toast.error("Please select a service image")
       return
