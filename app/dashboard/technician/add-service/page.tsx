@@ -1,10 +1,9 @@
 "use client"
-
+import { authClient } from "@/lib/auth-client"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   Wrench,
-  Upload,
   MapPin,
   DollarSign,
   FileText,
@@ -31,7 +30,7 @@ const categories = [
 
 export default function AddServicePage() {
   const router = useRouter()
-
+  const { data: session } = authClient.useSession()
   const [loading, setLoading] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState("")
@@ -68,6 +67,11 @@ export default function AddServicePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!session?.user?.id) {
+      toast.error("You must be logged in as a technician")
+      return
+    }
+
     if (
       !formData.title ||
       !formData.category ||
@@ -92,9 +96,12 @@ export default function AddServicePage() {
       Object.entries(formData).forEach(([key, value]) => {
         payload.append(key, value)
       })
+
       payload.append("image", imageFile)
 
-      const response = await fetch("/api/server/services", {
+      // The API route injects the signed-in technician's details so a service
+      // can never be stored without an owner.
+      const response = await fetch("/api/technician/services", {
         method: "POST",
         body: payload,
       })
@@ -124,7 +131,7 @@ export default function AddServicePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8 dark:bg-gray-950 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 px-4 py-8 sm:px-6 lg:px-8 dark:bg-gray-950">
       <div className="mx-auto max-w-4xl">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between gap-4">
@@ -134,7 +141,7 @@ export default function AddServicePage() {
                 <Wrench className="h-5 w-5 text-white" />
               </div>
 
-              <span className="text-sm font-semibold uppercase tracking-wide text-orange-500">
+              <span className="text-sm font-semibold tracking-wide text-orange-500 uppercase">
                 Technician Panel
               </span>
             </div>
@@ -150,7 +157,7 @@ export default function AddServicePage() {
 
           <Link
             href="/dashboard/technician/my-services"
-            className="hidden items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-blue-600 hover:text-blue-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400 sm:flex"
+            className="hidden items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-blue-600 hover:text-blue-600 sm:flex dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
           >
             <ArrowLeft className="h-4 w-4" />
             My Services
@@ -161,7 +168,7 @@ export default function AddServicePage() {
         <div className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <form onSubmit={handleSubmit}>
             {/* Basic Information */}
-            <div className="border-b border-gray-200 p-6 dark:border-gray-800 sm:p-8">
+            <div className="border-b border-gray-200 p-6 sm:p-8 dark:border-gray-800">
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Basic Information
@@ -189,7 +196,7 @@ export default function AddServicePage() {
                     value={formData.title}
                     onChange={handleChange}
                     placeholder="e.g. Professional AC Repair Service"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-950"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm transition outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-950"
                   />
                 </div>
 
@@ -207,7 +214,7 @@ export default function AddServicePage() {
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-950"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm transition outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-950"
                   >
                     <option value="">Select category</option>
 
@@ -229,7 +236,7 @@ export default function AddServicePage() {
                   </label>
 
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <DollarSign className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
 
                     <input
                       id="price"
@@ -239,7 +246,7 @@ export default function AddServicePage() {
                       value={formData.price}
                       onChange={handleChange}
                       placeholder="500"
-                      className="w-full rounded-lg border border-gray-300 bg-white py-3 pl-10 pr-4 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-950"
+                      className="w-full rounded-lg border border-gray-300 bg-white py-3 pr-4 pl-10 text-sm transition outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-950"
                     />
                   </div>
 
@@ -255,8 +262,7 @@ export default function AddServicePage() {
                     className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     <FileText className="h-4 w-4" />
-                    Service Description{" "}
-                    <span className="text-red-500">*</span>
+                    Service Description <span className="text-red-500">*</span>
                   </label>
 
                   <textarea
@@ -266,7 +272,7 @@ export default function AddServicePage() {
                     value={formData.description}
                     onChange={handleChange}
                     placeholder="Describe your repair service, what problems you solve, and what customers can expect..."
-                    className="w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-950"
+                    className="w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm transition outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-950"
                   />
 
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -277,7 +283,7 @@ export default function AddServicePage() {
             </div>
 
             {/* Service Details */}
-            <div className="border-b border-gray-200 p-6 dark:border-gray-800 sm:p-8">
+            <div className="border-b border-gray-200 p-6 sm:p-8 dark:border-gray-800">
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Service Details
@@ -303,7 +309,7 @@ export default function AddServicePage() {
                     name="serviceMode"
                     value={formData.serviceMode}
                     onChange={handleChange}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-950"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm transition outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-950"
                   >
                     <option value="Home Service">Home Service</option>
                     <option value="Workshop">Workshop</option>
@@ -328,14 +334,14 @@ export default function AddServicePage() {
                     value={formData.serviceArea}
                     onChange={handleChange}
                     placeholder="e.g. Mirpur, Dhanmondi, Uttara"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-950"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm transition outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-950"
                   />
                 </div>
               </div>
             </div>
 
             {/* Image */}
-            <div className="border-b border-gray-200 p-6 dark:border-gray-800 sm:p-8">
+            <div className="border-b border-gray-200 p-6 sm:p-8 dark:border-gray-800">
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Service Image
@@ -409,17 +415,17 @@ export default function AddServicePage() {
                 </h2>
 
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Choose whether customers can currently request this
-                  service.
+                  Choose whether customers can currently request this service.
                 </p>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <label
-                  className={`cursor-pointer rounded-xl border p-4 transition ${formData.availability === "available"
+                  className={`cursor-pointer rounded-xl border p-4 transition ${
+                    formData.availability === "available"
                       ? "border-blue-600 bg-blue-50 dark:border-blue-500 dark:bg-blue-950/30"
                       : "border-gray-300 hover:border-blue-300 dark:border-gray-700"
-                    }`}
+                  }`}
                 >
                   <input
                     type="radio"
@@ -432,10 +438,11 @@ export default function AddServicePage() {
 
                   <div className="flex items-center gap-3">
                     <div
-                      className={`h-4 w-4 rounded-full border-2 ${formData.availability === "available"
+                      className={`h-4 w-4 rounded-full border-2 ${
+                        formData.availability === "available"
                           ? "border-blue-600 bg-blue-600"
                           : "border-gray-400"
-                        }`}
+                      }`}
                     />
 
                     <div>
@@ -451,10 +458,11 @@ export default function AddServicePage() {
                 </label>
 
                 <label
-                  className={`cursor-pointer rounded-xl border p-4 transition ${formData.availability === "unavailable"
+                  className={`cursor-pointer rounded-xl border p-4 transition ${
+                    formData.availability === "unavailable"
                       ? "border-orange-500 bg-orange-50 dark:border-orange-500 dark:bg-orange-950/20"
                       : "border-gray-300 hover:border-orange-300 dark:border-gray-700"
-                    }`}
+                  }`}
                 >
                   <input
                     type="radio"
@@ -467,10 +475,11 @@ export default function AddServicePage() {
 
                   <div className="flex items-center gap-3">
                     <div
-                      className={`h-4 w-4 rounded-full border-2 ${formData.availability === "unavailable"
+                      className={`h-4 w-4 rounded-full border-2 ${
+                        formData.availability === "unavailable"
                           ? "border-orange-500 bg-orange-500"
                           : "border-gray-400"
-                        }`}
+                      }`}
                     />
 
                     <div>
@@ -488,7 +497,7 @@ export default function AddServicePage() {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 border-t border-gray-200 bg-gray-50 p-6 dark:border-gray-800 dark:bg-gray-950/50 sm:flex-row sm:justify-end sm:p-8">
+            <div className="flex flex-col-reverse gap-3 border-t border-gray-200 bg-gray-50 p-6 sm:flex-row sm:justify-end sm:p-8 dark:border-gray-800 dark:bg-gray-950/50">
               <Link
                 href="/dashboard/technician/my-services"
                 className="rounded-lg border border-gray-300 bg-white px-6 py-3 text-center text-sm font-semibold text-gray-700 transition hover:border-gray-400 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"

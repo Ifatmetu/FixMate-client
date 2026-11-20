@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth"
 import { mongodbAdapter } from "@better-auth/mongo-adapter"
 import { MongoClient } from "mongodb"
+import { admin } from "better-auth/plugins"
 
 const mongoUrl = process.env.BETTER_AUTH_DB_URL
 
@@ -24,6 +25,9 @@ export const auth = betterAuth({
   database: mongodbAdapter(db, {
     client,
   }),
+
+
+  plugins: [admin({ defaultRole: "customer" })],
 
   emailAndPassword: {
     enabled: true,
