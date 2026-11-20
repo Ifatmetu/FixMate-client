@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { MapPin, Wrench } from "lucide-react"
 
 import { formatCurrency } from "@/lib/format"
@@ -44,7 +45,10 @@ export default function ServicesPage() {
   }, [])
 
   const categories = useMemo(
-    () => Array.from(new Set(services.map((service) => service.category))),
+    () =>
+      Array.from(
+        new Set(services.map((service) => service.category).filter(Boolean))
+      ),
     [services]
   )
 
@@ -54,14 +58,15 @@ export default function ServicesPage() {
       : services.filter((service) => service.category === category)
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-12 dark:bg-gray-950 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8 dark:bg-gray-950">
       <div className="mx-auto max-w-6xl">
+        {/* Header */}
         <div className="max-w-2xl">
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
+          <p className="text-sm font-semibold tracking-wide text-blue-600 uppercase">
             FixMate services
           </p>
 
-          <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
+          <h1 className="mt-2 text-3xl font-bold text-gray-900 sm:text-4xl dark:text-white">
             Find a trusted repair service
           </h1>
 
@@ -71,6 +76,7 @@ export default function ServicesPage() {
           </p>
         </div>
 
+        {/* Category Filter */}
         {categories.length > 0 && (
           <div className="mt-8 flex flex-wrap gap-2">
             <button
@@ -102,6 +108,7 @@ export default function ServicesPage() {
           </div>
         )}
 
+        {/* Services */}
         <div className="mt-8">
           {isLoading ? (
             <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -130,6 +137,7 @@ export default function ServicesPage() {
                   key={service._id}
                   className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900"
                 >
+                  {/* Image */}
                   <div className="relative h-48 bg-gray-100 dark:bg-gray-800">
                     {service.image ? (
                       <Image
@@ -146,6 +154,7 @@ export default function ServicesPage() {
                     )}
                   </div>
 
+                  {/* Content */}
                   <div className="p-5">
                     <div className="flex items-center justify-between gap-3">
                       <h2 className="font-semibold text-gray-900 dark:text-white">
@@ -157,30 +166,46 @@ export default function ServicesPage() {
                       </span>
                     </div>
 
+                    {/* Category */}
                     <p className="mt-1 text-sm text-blue-600 dark:text-blue-400">
                       {service.category}
                     </p>
 
+                    {/* Description */}
                     {service.description && (
                       <p className="mt-3 line-clamp-3 text-sm text-gray-600 dark:text-gray-300">
                         {service.description}
                       </p>
                     )}
 
+                    {/* Area + Mode */}
                     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
                       <span className="inline-flex items-center gap-1">
                         <MapPin className="h-3.5 w-3.5" />
+
                         {service.serviceArea || "Area not specified"}
                       </span>
 
                       <span>{service.serviceMode || "Home Service"}</span>
                     </div>
 
+                    {/* Technician */}
                     {service.technicianName && (
                       <p className="mt-3 border-t border-gray-100 pt-3 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">
-                        By {service.technicianName}
+                        By{" "}
+                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                          {service.technicianName}
+                        </span>
                       </p>
                     )}
+
+                    {/* Details Button */}
+                    <Link
+                      href={`/services/${service._id}`}
+                      className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+                    >
+                      View Details
+                    </Link>
                   </div>
                 </article>
               ))}

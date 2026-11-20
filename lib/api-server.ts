@@ -24,7 +24,14 @@ export function jsonError(status: number, message: string) {
 export async function getApiSessionUser(): Promise<ApiSessionUser | null> {
   const session = await auth.api.getSession({ headers: await headers() })
 
-  return session?.user ?? null
+  if (!session?.user) return null
+
+  // Older accounts can have a null role. Better Auth's defaultRole and the
+  // dashboard both treat those users as customers, so the API should too.
+  return {
+    ...session.user,
+    role: session.user.role || "customer",
+  }
 }
 
 export async function requireApiRole(roles: string[]): Promise<RoleGuard> {

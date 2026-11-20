@@ -18,10 +18,24 @@ export type Service = {
   updatedAt?: string
 }
 
+export type BookingStatus = "pending" | "accepted" | "declined" | "paid"
+
 export type Booking = {
   _id: string
-  status?: string
+  serviceId?: string
+  serviceTitle?: string
+  servicePrice?: number
+  technicianId?: string | null
+  technicianName?: string
+  customerId?: string
+  customerName?: string
+  customerEmail?: string
+  phone?: string
+  preferredDate?: string
+  message?: string
+  status?: BookingStatus | string
   createdAt?: string
+  updatedAt?: string
   [key: string]: unknown
 }
 

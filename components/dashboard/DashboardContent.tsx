@@ -86,11 +86,13 @@ export function StatusBadge({ status }: { status?: string | null }) {
   const value = (status ?? "pending").toLowerCase()
 
   const tone =
-    value === "approved" || value === "active"
+    value === "approved" || value === "active" || value === "accepted"
       ? "bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300"
-      : value === "rejected" || value === "banned"
-        ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300"
-        : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+      : value === "paid"
+        ? "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+        : value === "rejected" || value === "banned" || value === "declined"
+          ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300"
+          : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
 
   return (
     <span
