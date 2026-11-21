@@ -1,7 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, MapPin, Wrench } from "lucide-react"
-
+import ServiceDetailsLink from "./ServiceDetailsLink"
 import { formatCurrency } from "@/lib/format"
 import type { Service } from "@/lib/types"
 
@@ -133,13 +133,7 @@ export default async function HomeServices() {
                   </p>
 
                   {/* Details */}
-                  <Link
-                    href={`/services/${service._id}`}
-                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
-                  >
-                    View Details
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  <ServiceDetailsLink serviceId={service._id} />
                 </div>
               </article>
             ))}

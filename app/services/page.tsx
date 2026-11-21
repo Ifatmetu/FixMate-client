@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Image from "next/image"
-import Link from "next/link"
 import { MapPin, Wrench } from "lucide-react"
 
+import ServiceDetailsLink from "@/components/Home/ServiceDetailsLink"
 import { formatCurrency } from "@/lib/format"
 import type { Service } from "@/lib/types"
 
@@ -200,12 +200,7 @@ export default function ServicesPage() {
                     )}
 
                     {/* Details Button */}
-                    <Link
-                      href={`/services/${service._id}`}
-                      className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
-                    >
-                      View Details
-                    </Link>
+                    <ServiceDetailsLink serviceId={service._id} />
                   </div>
                 </article>
               ))}

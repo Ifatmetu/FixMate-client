@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, Mail, MapPin, Wrench } from "lucide-react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import toast from "react-hot-toast"
 
 import { authClient } from "@/lib/auth-client"
@@ -14,8 +14,9 @@ import type { Service } from "@/lib/types"
 export default function ServiceDetailsPage() {
   const params = useParams()
   const id = params.id as string
+  const router = useRouter()
 
-  const { data: session } = authClient.useSession()
+  const { data: session, isPending: isSessionPending } = authClient.useSession()
   const [service, setService] = useState<Service | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -28,6 +29,12 @@ export default function ServiceDetailsPage() {
     preferredDate: "",
     message: "",
   })
+
+  useEffect(() => {
+    if (!id || isSessionPending || session?.user) return
+
+    router.replace(`/sign-in?redirect=${encodeURIComponent(`/services/${id}`)}`)
+  }, [id, isSessionPending, session?.user, router])
 
   useEffect(() => {
     if (!id) return
@@ -127,7 +134,7 @@ export default function ServiceDetailsPage() {
   }
 
   /* Loading */
-  if (isLoading) {
+  if (isLoading || isSessionPending || !session?.user) {
     return (
       <main className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8 dark:bg-gray-950">
         <div className="mx-auto max-w-6xl">
