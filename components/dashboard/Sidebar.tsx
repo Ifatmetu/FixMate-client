@@ -68,6 +68,11 @@ const menuItems = {
       icon: ClipboardList,
     },
     {
+      label: "Subscription",
+      href: "/dashboard/technician/subscription",
+      icon: CreditCard,
+    },
+    {
       label: "Profile",
       href: "/dashboard/profile",
       icon: User,
@@ -101,6 +106,11 @@ const menuItems = {
       icon: Receipt,
     },
     {
+      label: "Subscriptions",
+      href: "/dashboard/admin/subscription",
+      icon: CreditCard,
+    },
+    {
       label: "Profile",
       href: "/dashboard/profile",
       icon: User,
@@ -108,11 +118,7 @@ const menuItems = {
   ],
 }
 
-export default function Sidebar({
-  role,
-  isOpen,
-  onClose,
-}: SidebarProps) {
+export default function Sidebar({ role, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
 
   const items = menuItems[role]
@@ -129,17 +135,13 @@ export default function Sidebar({
 
       {/* ================= SIDEBAR ================= */}
       <aside
-        className={`fixed left-0 top-0 z-50 h-screen w-72 border-r border-gray-200 bg-white transition-transform duration-300 dark:border-gray-800 dark:bg-gray-950 lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-screen w-72 border-r border-gray-200 bg-white transition-transform duration-300 lg:translate-x-0 dark:border-gray-800 dark:bg-gray-950 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* ================= LOGO ================= */}
         <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6 dark:border-gray-800">
-          <Link
-            href="/"
-            onClick={onClose}
-            className="flex items-center gap-2"
-          >
+          <Link href="/" onClick={onClose} className="flex items-center gap-2">
             {/* Logo Icon */}
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600">
               <Wrench className="h-5 w-5 text-white" />
@@ -156,7 +158,7 @@ export default function Sidebar({
             type="button"
             onClick={onClose}
             aria-label="Close sidebar"
-            className="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-white lg:hidden"
+            className="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 lg:hidden dark:hover:bg-gray-800 dark:hover:text-white"
           >
             <X className="h-5 w-5" />
           </button>
@@ -164,18 +166,18 @@ export default function Sidebar({
 
         {/* ================= ROLE CARD ================= */}
         <div className="mx-4 mt-6 rounded-xl bg-blue-50 p-4 dark:bg-blue-950/40">
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <p className="text-xs font-medium tracking-wide text-gray-500 uppercase dark:text-gray-400">
             Logged in as
           </p>
 
-          <p className="mt-1 font-semibold capitalize text-blue-700 dark:text-blue-400">
+          <p className="mt-1 font-semibold text-blue-700 capitalize dark:text-blue-400">
             {role}
           </p>
         </div>
 
         {/* ================= MENU ================= */}
         <nav className="mt-6 px-4">
-          <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <p className="mb-3 px-3 text-xs font-semibold tracking-wider text-gray-400 uppercase">
             Menu
           </p>
 
@@ -183,13 +185,11 @@ export default function Sidebar({
             {items.map((item) => {
               const Icon = item.icon
 
-              const isDashboard =
-                item.href === `/dashboard/${role}`
+              const isDashboard = item.href === `/dashboard/${role}`
 
               const isActive =
                 pathname === item.href ||
-                (!isDashboard &&
-                  pathname.startsWith(`${item.href}/`))
+                (!isDashboard && pathname.startsWith(`${item.href}/`))
 
               return (
                 <Link

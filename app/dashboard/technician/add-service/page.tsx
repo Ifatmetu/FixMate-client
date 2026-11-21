@@ -9,10 +9,15 @@ import {
   FileText,
   Image as ImageIcon,
   ArrowLeft,
+  CreditCard,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import toast from "react-hot-toast"
+
+import { PageHeader } from "@/components/dashboard/DashboardContent"
+import { formatCurrency } from "@/lib/format"
+import type { TechnicianSubscriptionStatus } from "@/lib/types"
 
 const categories = [
   "AC Repair",
@@ -34,6 +39,8 @@ export default function AddServicePage() {
   const [loading, setLoading] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState("")
+  const [subscription, setSubscription] =
+    useState<TechnicianSubscriptionStatus | null>(null)
 
   const [formData, setFormData] = useState({
     title: "",
@@ -50,6 +57,32 @@ export default function AddServicePage() {
       if (imagePreview) URL.revokeObjectURL(imagePreview)
     }
   }, [imagePreview])
+
+  useEffect(() => {
+    const loadSubscription = async () => {
+      try {
+        const response = await fetch("/api/technician/subscription", {
+          cache: "no-store",
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+
+          setSubscription(result as TechnicianSubscriptionStatus)
+        }
+      } catch (error) {
+        console.error("Failed to load subscription status:", error)
+      }
+    }
+
+    loadSubscription()
+  }, [])
+
+  const limitReached = Boolean(
+    subscription &&
+    !subscription.isSubscribed &&
+    subscription.serviceCount >= subscription.freeLimit
+  )
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -133,6 +166,55 @@ export default function AddServicePage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (limitReached && subscription) {
+    return (
+      <div className="min-h-screen bg-gray-50 px-4 py-8 sm:px-6 lg:px-8 dark:bg-gray-950">
+        <div className="mx-auto max-w-2xl">
+          <PageHeader
+            title="Add New Service"
+            description="Service submission is locked until your subscription is active."
+          />
+
+          <div className="rounded-xl border border-gray-200 bg-white p-8 text-center dark:border-gray-800 dark:bg-gray-900">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950">
+              <CreditCard className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            </div>
+
+            <h2 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
+              Free service limit reached
+            </h2>
+
+            <p className="mx-auto mt-2 max-w-md text-sm text-gray-500 dark:text-gray-400">
+              You have submitted {subscription.serviceCount} of{" "}
+              {subscription.freeLimit} free services. Pay{" "}
+              <strong className="text-gray-900 dark:text-white">
+                {formatCurrency(subscription.amount)}
+              </strong>{" "}
+              with Stripe using Get Subscription on the subscription page, or
+              ask the admin to activate it after a manual payment.
+            </p>
+
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Link
+                href="/dashboard/technician/subscription"
+                className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                View subscription
+              </Link>
+
+              <Link
+                href="/dashboard/technician/my-services"
+                className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                My services
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

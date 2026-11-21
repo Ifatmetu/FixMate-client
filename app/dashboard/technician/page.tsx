@@ -20,7 +20,11 @@ import {
   StatusBadge,
 } from "@/components/dashboard/DashboardContent"
 import { formatCurrency, formatDate, pickField } from "@/lib/format"
-import type { Booking, Service } from "@/lib/types"
+import type {
+  Booking,
+  Service,
+  TechnicianSubscriptionStatus,
+} from "@/lib/types"
 
 const statusRank: Record<string, number> = {
   approved: 0,
@@ -31,21 +35,27 @@ const statusRank: Record<string, number> = {
 export default function TechnicianDashboardPage() {
   const [services, setServices] = useState<Service[]>([])
   const [bookings, setBookings] = useState<Booking[]>([])
+  const [subscription, setSubscription] =
+    useState<TechnicianSubscriptionStatus | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
 
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const [servicesResponse, bookingsResponse] = await Promise.all([
-          fetch("/api/technician/services", { cache: "no-store" }),
-          fetch("/api/technician/bookings", { cache: "no-store" }),
-        ])
+        const [servicesResponse, bookingsResponse, subscriptionResponse] =
+          await Promise.all([
+            fetch("/api/technician/services", { cache: "no-store" }),
+            fetch("/api/technician/bookings", { cache: "no-store" }),
+            fetch("/api/technician/subscription", { cache: "no-store" }),
+          ])
 
-        const [servicesData, bookingsData] = await Promise.all([
-          servicesResponse.json().catch(() => ({})),
-          bookingsResponse.json().catch(() => ({})),
-        ])
+        const [servicesData, bookingsData, subscriptionData] =
+          await Promise.all([
+            servicesResponse.json().catch(() => ({})),
+            bookingsResponse.json().catch(() => ({})),
+            subscriptionResponse.json().catch(() => ({})),
+          ])
 
         if (!servicesResponse.ok) {
           throw new Error(
@@ -61,6 +71,11 @@ export default function TechnicianDashboardPage() {
 
         setServices(Array.isArray(servicesData) ? servicesData : [])
         setBookings(Array.isArray(bookingsData) ? bookingsData : [])
+        setSubscription(
+          subscriptionResponse.ok
+            ? (subscriptionData as TechnicianSubscriptionStatus)
+            : null
+        )
         setError("")
       } catch (err) {
         setError(
@@ -162,6 +177,37 @@ export default function TechnicianDashboardPage() {
               icon={CreditCard}
             />
           </div>
+
+          {!isLoading && subscription && (
+            <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <CreditCard className="mt-0.5 h-5 w-5 text-blue-600" />
+
+                  <div>
+                    <h2 className="font-semibold text-gray-900 dark:text-white">
+                      {subscription.isSubscribed
+                        ? "Subscription active — unlimited services"
+                        : `${subscription.serviceCount} of ${subscription.freeLimit} free services used`}
+                    </h2>
+
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      {subscription.isSubscribed
+                        ? "You can keep adding services without a limit."
+                        : `Pay ${formatCurrency(subscription.amount)} once with Stripe to unlock unlimited services.`}
+                    </p>
+                  </div>
+                </div>
+
+                <Link
+                  href="/dashboard/technician/subscription"
+                  className="shrink-0 rounded-lg bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-blue-700"
+                >
+                  Manage subscription
+                </Link>
+              </div>
+            </div>
+          )}
 
           <section className="mt-8">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import type Stripe from "stripe"
 
 import { fulfillPaidBooking } from "@/lib/checkout"
+import { fulfillSubscription } from "@/lib/subscription-checkout"
 import { stripe } from "@/lib/stripe"
 
 export async function POST(request: Request) {
@@ -48,22 +49,44 @@ export async function POST(request: Request) {
     const session = event.data.object as Stripe.Checkout.Session
 
     if (session.payment_status === "paid") {
-      const bookingId = session.metadata?.bookingId ?? ""
-      const customerId = session.metadata?.customerId ?? ""
+      const paymentIntentId =
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : session.payment_intent?.id
 
-      if (/^[a-f\d]{24}$/i.test(bookingId) && customerId) {
-        const paymentIntentId =
-          typeof session.payment_intent === "string"
-            ? session.payment_intent
-            : session.payment_intent?.id
+      if (session.metadata?.purpose === "subscription") {
+        const technicianId = session.metadata?.technicianId ?? ""
+        const amount =
+          Number(session.metadata?.amount) ||
+          Math.round((session.amount_total ?? 0) / 100)
 
-        const result = await fulfillPaidBooking(bookingId, customerId, {
-          sessionId: session.id,
-          paymentIntentId,
-        })
+        if (
+          /^[a-f\d]{24}$/i.test(technicianId) &&
+          Number.isFinite(amount) &&
+          amount > 0
+        ) {
+          const result = await fulfillSubscription(technicianId, amount, {
+            sessionId: session.id,
+            paymentIntentId,
+          })
 
-        if (!result.ok) {
-          console.error("Failed to fulfill Stripe payment:", result)
+          if (!result.ok) {
+            console.error("Failed to fulfill subscription payment:", result)
+          }
+        }
+      } else {
+        const bookingId = session.metadata?.bookingId ?? ""
+        const customerId = session.metadata?.customerId ?? ""
+
+        if (/^[a-f\d]{24}$/i.test(bookingId) && customerId) {
+          const result = await fulfillPaidBooking(bookingId, customerId, {
+            sessionId: session.id,
+            paymentIntentId,
+          })
+
+          if (!result.ok) {
+            console.error("Failed to fulfill Stripe payment:", result)
+          }
         }
       }
     }

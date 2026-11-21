@@ -50,3 +50,35 @@ export type ManagedUser = {
   area?: string | null
   banned?: boolean | null
 }
+
+export type SubscriptionSettings = {
+  freeLimit: number
+  amount: number
+}
+
+export type TechnicianSubscriptionStatus = SubscriptionSettings & {
+  serviceCount: number
+  remaining: number
+  isSubscribed: boolean
+  subscription: {
+    status?: string
+    amount?: number
+    activatedAt?: string
+    notes?: string
+  }
+}
+
+export type ManagedTechnicianSubscription = SubscriptionSettings & {
+  id: string
+  name: string
+  email: string
+  banned: boolean
+  serviceCount: number
+  isSubscribed: boolean
+  subscription: {
+    status?: string
+    amount?: number
+    activatedAt?: string
+    notes?: string
+  }
+}
