@@ -421,6 +421,8 @@ export default function AddServicePage() {
 
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   Choose whether customers can currently request this service.
+                  You can change this anytime after admin approval from My
+                  Services.
                 </p>
               </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Plus, Wrench } from "lucide-react"
+import toast from "react-hot-toast"
 
 import {
   EmptyState,
@@ -27,6 +28,7 @@ export default function TechnicianServicesPage() {
   const [filter, setFilter] = useState<Filter>("all")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
+  const [busyId, setBusyId] = useState("")
 
   useEffect(() => {
     const loadServices = async () => {
@@ -51,6 +53,47 @@ export default function TechnicianServicesPage() {
 
     loadServices()
   }, [])
+
+  const toggleAvailability = async (service: Service) => {
+    const nextAvailability =
+      service.availability === "unavailable" ? "available" : "unavailable"
+
+    try {
+      setBusyId(service._id)
+
+      const response = await fetch(`/api/technician/services/${service._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ availability: nextAvailability }),
+      })
+
+      const result = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        throw new Error(result?.message ?? "Failed to update availability")
+      }
+
+      setServices((current) =>
+        current.map((item) =>
+          item._id === service._id
+            ? { ...item, availability: nextAvailability }
+            : item
+        )
+      )
+
+      toast.success(
+        nextAvailability === "available"
+          ? "Service is now available to customers"
+          : "Service is now unavailable"
+      )
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to update availability"
+      )
+    } finally {
+      setBusyId("")
+    }
+  }
 
   const countFor = (value: Filter) =>
     value === "all"
@@ -167,6 +210,31 @@ export default function TechnicianServicesPage() {
                   {service.serviceArea || "No area"} · Submitted{" "}
                   {formatDate(service.createdAt)}
                 </p>
+
+                <div className="mt-4 flex items-center justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-950/50">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">
+                    {service.approvalStatus !== "approved"
+                      ? "Availability can be changed after approval"
+                      : service.availability === "unavailable"
+                        ? "Unavailable to customers"
+                        : "Available to customers"}
+                  </span>
+
+                  {service.approvalStatus === "approved" && (
+                    <button
+                      type="button"
+                      onClick={() => toggleAvailability(service)}
+                      disabled={busyId === service._id}
+                      className="shrink-0 rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 transition hover:border-blue-600 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                    >
+                      {busyId === service._id
+                        ? "Saving..."
+                        : service.availability === "unavailable"
+                          ? "Mark available"
+                          : "Mark unavailable"}
+                    </button>
+                  )}
+                </div>
 
                 {service.approvalStatus === "rejected" && (
                   <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 dark:bg-red-950/40 dark:text-red-300">
