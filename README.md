@@ -4,6 +4,14 @@ FixMate is a full-stack repair service platform that connects customers with tec
 
 Customers can browse approved services, request repairs, track booking progress, and make payments. Technicians can create and manage repair services and handle customer requests, while administrators manage users, services, bookings, and transactions.
 
+
+## 🌐 Live URL
+
+Frontend: https://fix-mate-client-sooty.vercel.app
+
+Backend API: https://fix-mate-server-nu.vercel.app/
+
+
 ## ✨ Features
 
 ### 👤 Customer
@@ -87,3 +95,28 @@ Protected operations are handled according to the user's role so that customers,
 - Technicians must provide the final repair amount before completing a booking.
 - Completed unpaid bookings can proceed to payment.
 - Payment records are stored in the database after successful payment.
+
+
+## 📦 NPM Packages Used
+
+Client
+
+next
+react
+react-dom
+typescript
+tailwindcss
+lucide-react
+react-hot-toast
+better-auth
+@better-auth/mongo-adapter
+@stripe/stripe-js
+
+Server
+
+express
+mongodb
+cors
+dotenv
+multer
+stripe
