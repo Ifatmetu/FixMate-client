@@ -65,7 +65,7 @@ export default function SignInForm({ redirectPath }: SignInFormProps) {
     try {
       const { error } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: new URL(redirectPath, window.location.origin).toString(),
+        callbackURL: redirectPath,
       })
 
       if (error) {

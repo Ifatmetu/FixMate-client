@@ -16,6 +16,16 @@ if (!baseURL) {
   throw new Error("BETTER_AUTH_URL is not defined")
 }
 
+const localOrigins =
+  process.env.NODE_ENV === "production"
+    ? []
+    : [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+      ]
+
 const client = new MongoClient(mongoUrl)
 
 const db = client.db("FixMate")
@@ -40,6 +50,15 @@ function safeSignupRole(value: unknown): SignupRole {
 
 export const auth = betterAuth({
   baseURL,
+
+  // Better Auth rejects requests whose Origin is not trusted. Keep the
+  // production URL, allow local dev URLs, and include Vercel's generated
+  // preview host so sign-in/sign-up work everywhere.
+  trustedOrigins: [
+    baseURL,
+    ...localOrigins,
+    ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+  ],
 
   database: mongodbAdapter(db, {
     client,
