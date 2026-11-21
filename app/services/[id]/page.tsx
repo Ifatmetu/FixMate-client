@@ -17,6 +17,12 @@ export default function ServiceDetailsPage() {
   const router = useRouter()
 
   const { data: session, isPending: isSessionPending } = authClient.useSession()
+
+  // Only customers can request repairs. Older accounts with no role are still
+  // treated as customers (same rule as the API).
+  const userRole = session?.user?.role
+  const canRequestRepair = !userRole || userRole === "customer"
+
   const [service, setService] = useState<Service | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -80,6 +86,15 @@ export default function ServiceDetailsPage() {
     event.preventDefault()
 
     if (!service) return
+
+    if (!canRequestRepair) {
+      toast.error(
+        userRole === "technician"
+          ? "Technicians cannot send repair requests."
+          : "Only customers can send repair requests."
+      )
+      return
+    }
 
     const customerName =
       requestForm.customerName.trim() || session?.user?.name || ""
@@ -266,81 +281,91 @@ export default function ServiceDetailsPage() {
               </div>
             </div>
 
-            {/* Request Repair */}
-            <button
-              type="button"
-              onClick={() => setShowRequest((value) => !value)}
-              className="mt-8 w-full rounded-lg bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
-            >
-              {showRequest ? "Cancel request" : "Request Repair"}
-            </button>
-
-            {showRequest && (
-              <form
-                onSubmit={submitRequest}
-                className="mt-4 space-y-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
-              >
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                  Repair request details
-                </p>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <input
-                    name="customerName"
-                    value={requestForm.customerName}
-                    onChange={handleRequestChange}
-                    placeholder={session?.user?.name || "Your name"}
-                    aria-label="Your name"
-                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
-                  />
-
-                  <input
-                    name="customerEmail"
-                    type="email"
-                    value={requestForm.customerEmail}
-                    onChange={handleRequestChange}
-                    placeholder={session?.user?.email || "Your email"}
-                    aria-label="Your email"
-                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
-                  />
-
-                  <input
-                    name="phone"
-                    value={requestForm.phone}
-                    onChange={handleRequestChange}
-                    placeholder="Phone number"
-                    aria-label="Phone number"
-                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
-                  />
-
-                  <input
-                    name="preferredDate"
-                    type="date"
-                    value={requestForm.preferredDate}
-                    onChange={handleRequestChange}
-                    aria-label="Preferred date"
-                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
-                  />
-                </div>
-
-                <textarea
-                  name="message"
-                  value={requestForm.message}
-                  onChange={handleRequestChange}
-                  rows={3}
-                  placeholder="Describe the problem (optional)"
-                  aria-label="Describe the problem"
-                  className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
-                />
-
+            {/* Request Repair — customers only */}
+            {canRequestRepair ? (
+              <>
                 <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  type="button"
+                  onClick={() => setShowRequest((value) => !value)}
+                  className="mt-8 w-full rounded-lg bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
                 >
-                  {isSubmitting ? "Sending..." : "Send request"}
+                  {showRequest ? "Cancel request" : "Request Repair"}
                 </button>
-              </form>
+
+                {showRequest && (
+                  <form
+                    onSubmit={submitRequest}
+                    className="mt-4 space-y-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900"
+                  >
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                      Repair request details
+                    </p>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <input
+                        name="customerName"
+                        value={requestForm.customerName}
+                        onChange={handleRequestChange}
+                        placeholder={session?.user?.name || "Your name"}
+                        aria-label="Your name"
+                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+                      />
+
+                      <input
+                        name="customerEmail"
+                        type="email"
+                        value={requestForm.customerEmail}
+                        onChange={handleRequestChange}
+                        placeholder={session?.user?.email || "Your email"}
+                        aria-label="Your email"
+                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+                      />
+
+                      <input
+                        name="phone"
+                        value={requestForm.phone}
+                        onChange={handleRequestChange}
+                        placeholder="Phone number"
+                        aria-label="Phone number"
+                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+                      />
+
+                      <input
+                        name="preferredDate"
+                        type="date"
+                        value={requestForm.preferredDate}
+                        onChange={handleRequestChange}
+                        aria-label="Preferred date"
+                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+                      />
+                    </div>
+
+                    <textarea
+                      name="message"
+                      value={requestForm.message}
+                      onChange={handleRequestChange}
+                      rows={3}
+                      placeholder="Describe the problem (optional)"
+                      aria-label="Describe the problem"
+                      className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-600 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+                    />
+
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isSubmitting ? "Sending..." : "Send request"}
+                    </button>
+                  </form>
+                )}
+              </>
+            ) : (
+              <p className="mt-8 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+                {userRole === "technician"
+                  ? "Technicians can't send repair requests."
+                  : "Only customers can send repair requests."}
+              </p>
             )}
           </div>
         </div>

@@ -22,7 +22,12 @@ export function jsonError(status: number, message: string) {
 }
 
 export async function getApiSessionUser(): Promise<ApiSessionUser | null> {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await auth.api.getSession({
+    headers: await headers(),
+    // Read the role from the database, not from a cached session cookie, so a
+    // role change takes effect immediately (e.g. a customer becoming a tech).
+    query: { disableCookieCache: true },
+  })
 
   if (!session?.user) return null
 
@@ -43,6 +48,34 @@ export async function requireApiRole(roles: string[]): Promise<RoleGuard> {
 
   if (!user.role || !roles.includes(user.role)) {
     return { error: jsonError(403, "You do not have permission to do that.") }
+  }
+
+  return { user }
+}
+
+type CustomerGuard =
+  | { error: Response; user?: never }
+  | { error?: undefined; user: ApiSessionUser }
+
+// Repair requests are customer-only. Technicians get an explicit denial so a
+// role mix-up can never silently create a booking.
+export async function requireCustomer(): Promise<CustomerGuard> {
+  const user = await getApiSessionUser()
+
+  if (!user) {
+    return { error: jsonError(401, "You must be signed in.") }
+  }
+
+  if (user.role === "technician") {
+    return {
+      error: jsonError(403, "Technicians cannot send repair requests."),
+    }
+  }
+
+  if (user.role !== "customer") {
+    return {
+      error: jsonError(403, "Only customers can send repair requests."),
+    }
   }
 
   return { user }

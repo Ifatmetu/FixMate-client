@@ -1,4 +1,9 @@
-import { jsonError, proxyApi, requireApiRole } from "@/lib/api-server"
+import {
+  jsonError,
+  proxyApi,
+  requireApiRole,
+  requireCustomer,
+} from "@/lib/api-server"
 
 type BookingRequest = {
   serviceId?: unknown
@@ -24,7 +29,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const guard = await requireApiRole(["customer"])
+  const guard = await requireCustomer()
 
   if (guard.error) return guard.error
 
@@ -65,10 +70,8 @@ export async function POST(request: Request) {
     return jsonError(502, "Could not load service details")
   }
 
-  const customerName =
-    asText(guard.user.name) || asText(body?.customerName)
-  const customerEmail =
-    asText(guard.user.email) || asText(body?.customerEmail)
+  const customerName = asText(guard.user.name) || asText(body?.customerName)
+  const customerEmail = asText(guard.user.email) || asText(body?.customerEmail)
 
   if (!customerName || !customerEmail) {
     return jsonError(400, "Please provide your name and email")

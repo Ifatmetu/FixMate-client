@@ -15,10 +15,6 @@ const nextConfig: NextConfig = {
         source: "/api/server/services/:id",
         destination: `${apiServerUrl}/services/:id`,
       },
-      {
-        source: "/api/server/bookings",
-        destination: `${apiServerUrl}/bookings`,
-      },
     ]
   },
 }
