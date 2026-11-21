@@ -26,7 +26,23 @@ const localOrigins =
         "http://127.0.0.1:3001",
       ]
 
-const client = new MongoClient(mongoUrl)
+const mongoOptions = {
+  maxPoolSize: 10,
+  minPoolSize: 0,
+  maxIdleTimeMS: 15000,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+}
+
+declare global {
+  var _mongoAuthClient: MongoClient | undefined
+}
+
+if (!globalThis._mongoAuthClient) {
+  globalThis._mongoAuthClient = new MongoClient(mongoUrl, mongoOptions)
+}
+
+const client = globalThis._mongoAuthClient
 
 const db = client.db("FixMate")
 
@@ -53,16 +69,18 @@ export const auth = betterAuth({
 
   // Better Auth rejects requests whose Origin is not trusted. Keep the
   // production URL, allow local dev URLs, and include Vercel's generated
-  // preview host so sign-in/sign-up work everywhere.
+  // preview and production hosts so sign-in/sign-up work everywhere.
   trustedOrigins: [
     baseURL,
+    "https://*.vercel.app",
     ...localOrigins,
     ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+    ...(process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`]
+      : []),
   ],
 
-  database: mongodbAdapter(db, {
-    client,
-  }),
+  database: mongodbAdapter(db),
 
   emailAndPassword: {
     enabled: true,
