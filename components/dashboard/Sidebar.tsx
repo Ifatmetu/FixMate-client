@@ -134,7 +134,7 @@ export default function Sidebar({
         }`}
       >
         {/* ================= LOGO ================= */}
-        <div className="flex h-20 items-center justify-between border-b border-gray-200 px-6 dark:border-gray-800">
+        <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6 dark:border-gray-800">
           <Link
             href="/"
             onClick={onClose}

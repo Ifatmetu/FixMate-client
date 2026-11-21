@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Wrench } from "lucide-react"
-
+import SearchBar from "./SearchBar"
 import UserMenu from "./UserMenu"
 import MobileMenu from "./MobileMenu"
 import ThemeToggle from "./ThemeToggle"
@@ -98,9 +98,10 @@ export default function Navbar() {
 
         {/* Desktop Auth */}
         <div className="hidden items-center gap-3 md:flex">
-          <ThemeToggle />
-          <UserMenu />
-        </div>
+  <SearchBar />
+  <ThemeToggle />
+  <UserMenu />
+</div>
 
         {/* Mobile Menu */}
         <MobileMenu navLinks={navLinks} onNavigate={handleNavigation} />
