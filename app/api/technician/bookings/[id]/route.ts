@@ -25,7 +25,9 @@ export async function PATCH(request: Request, { params }: Context) {
     return jsonError(400, "Action must be accept or decline")
   }
 
-  return proxyApi(`/bookings/${id}/${body.action}`, {
+  const serverAction = body.action === "decline" ? "reject" : body.action
+
+  return proxyApi(`/bookings/${id}/${serverAction}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ technicianId: guard.user.id }),

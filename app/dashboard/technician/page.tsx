@@ -105,7 +105,7 @@ export default function TechnicianDashboardPage() {
   ).length
 
   const newRequests = bookings.filter(
-    (booking) => booking.status === "pending"
+    (booking) => booking.status === "requested" || booking.status === "pending"
   ).length
   const acceptedRequests = bookings.filter(
     (booking) => booking.status === "accepted"

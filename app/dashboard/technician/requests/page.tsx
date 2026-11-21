@@ -39,9 +39,7 @@ export default function TechnicianRequestsPage() {
         setBookings(Array.isArray(data) ? data : [])
         setError("")
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to load requests"
-        )
+        setError(err instanceof Error ? err.message : "Failed to load requests")
       } finally {
         setIsLoading(false)
       }
@@ -107,9 +105,7 @@ export default function TechnicianRequestsPage() {
             const status = booking.status ?? "pending"
             const isBusy = updatingId === booking._id
             const message =
-              typeof booking.message === "string"
-                ? booking.message.trim()
-                : ""
+              typeof booking.message === "string" ? booking.message.trim() : ""
 
             return (
               <div
@@ -119,11 +115,7 @@ export default function TechnicianRequestsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h2 className="font-semibold text-gray-900 dark:text-white">
-                      {pickField(booking, [
-                        "serviceTitle",
-                        "title",
-                        "service",
-                      ])}
+                      {pickField(booking, ["serviceTitle", "title", "service"])}
                     </h2>
 
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -140,10 +132,7 @@ export default function TechnicianRequestsPage() {
                       Customer
                     </dt>
                     <dd className="text-right text-gray-900 dark:text-white">
-                      {pickField(booking, [
-                        "customerName",
-                        "customerEmail",
-                      ])}
+                      {pickField(booking, ["customerName", "customerEmail"])}
                     </dd>
                   </div>
 
@@ -179,7 +168,7 @@ export default function TechnicianRequestsPage() {
                   </p>
                 )}
 
-                {status === "pending" && (
+                {(status === "requested" || status === "pending") && (
                   <div className="mt-4 flex flex-wrap gap-2">
                     <button
                       type="button"
