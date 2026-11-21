@@ -82,7 +82,7 @@ export default function SignInForm({ redirectPath }: SignInFormProps) {
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-950">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid w-full max-w-5xl overflow-hidden rounded-2xl border bg-white shadow-xl dark:border-gray-800 dark:bg-gray-900">
+        <div className="grid w-full max-w-5xl overflow-hidden rounded-2xl border bg-white shadow-xl lg:grid-cols-2 dark:border-gray-800 dark:bg-gray-900">
           {/* LEFT SIDE */}
           <div className="hidden bg-gradient-to-br from-[#1D4ED8] to-[#1E3A8A] p-10 text-white lg:flex lg:flex-col lg:justify-between">
             <div>
@@ -113,6 +113,37 @@ export default function SignInForm({ redirectPath }: SignInFormProps) {
                   Sign in to manage your repair requests, connect with
                   technicians, and keep track of your services.
                 </p>
+              </div>
+
+              {/* Benefits */}
+              <div className="mt-10 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-400/20">
+                    ✓
+                  </div>
+
+                  <span className="text-sm text-blue-100">
+                    Trusted technicians
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-400/20">
+                    ✓
+                  </div>
+
+                  <span className="text-sm text-blue-100">
+                    Easy repair booking
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-400/20">
+                    ✓
+                  </div>
+
+                  <span className="text-sm text-blue-100">Secure payments</span>
+                </div>
               </div>
             </div>
 
