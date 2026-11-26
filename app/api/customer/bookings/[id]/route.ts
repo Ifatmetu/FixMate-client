@@ -41,7 +41,6 @@ export async function PATCH(request: Request, { params }: Context) {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      customerId: guard.user.id,
       method,
       paymentReference: reference || null,
     }),

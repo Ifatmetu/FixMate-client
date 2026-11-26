@@ -83,8 +83,16 @@ export async function requireCustomer(): Promise<CustomerGuard> {
 
 export async function proxyApi(path: string, init?: RequestInit) {
   try {
+    const forwarded = new Headers(init?.headers)
+    const cookie = (await headers()).get("cookie")
+
+    if (cookie && !forwarded.has("cookie")) {
+      forwarded.set("cookie", cookie)
+    }
+
     const upstream = await fetch(`${apiServerUrl}${path}`, {
       ...init,
+      headers: forwarded,
       cache: "no-store",
     })
 

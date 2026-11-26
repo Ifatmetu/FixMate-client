@@ -5,7 +5,5 @@ export async function GET() {
 
   if (guard.error) return guard.error
 
-  const query = new URLSearchParams({ technicianId: guard.user.id })
-
-  return proxyApi(`/bookings?${query.toString()}`)
+  return proxyApi("/bookings")
 }

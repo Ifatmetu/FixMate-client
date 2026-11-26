@@ -37,7 +37,6 @@ export async function PATCH(request: Request, { params }: Context) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       availability: body.availability,
-      technicianId: guard.user.id,
     }),
   })
 }

@@ -23,15 +23,5 @@ export async function POST(request: Request) {
     return jsonError(400, "Expected multipart form data")
   }
 
-  payload.append("technicianId", guard.user.id)
-
-  if (guard.user.name) {
-    payload.append("technicianName", guard.user.name)
-  }
-
-  if (guard.user.email) {
-    payload.append("technicianEmail", guard.user.email)
-  }
-
   return proxyApi("/services", { method: "POST", body: payload })
 }

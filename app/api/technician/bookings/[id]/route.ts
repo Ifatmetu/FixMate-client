@@ -30,6 +30,5 @@ export async function PATCH(request: Request, { params }: Context) {
   return proxyApi(`/bookings/${id}/${serverAction}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ technicianId: guard.user.id }),
   })
 }

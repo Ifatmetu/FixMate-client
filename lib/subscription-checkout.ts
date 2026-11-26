@@ -13,9 +13,12 @@ export async function fulfillSubscription(
   amount: number,
   stripeDetails?: { sessionId?: string; paymentIntentId?: string }
 ): Promise<FulfillResult> {
-  const response = await proxyApi("/subscription/pay", {
+  const response = await proxyApi("/internal/subscription/pay", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-fixmate-service-token": process.env.FIXMATE_SERVICE_TOKEN ?? "",
+    },
     body: JSON.stringify({
       technicianId,
       amount,

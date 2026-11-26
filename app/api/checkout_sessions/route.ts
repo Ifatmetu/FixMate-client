@@ -28,10 +28,7 @@ export async function POST(request: Request) {
     return jsonError(400, "Invalid booking ID")
   }
 
-  const query = new URLSearchParams({ customerId: guard.user.id })
-  const bookingResponse = await proxyApi(
-    `/bookings/${bookingId}?${query.toString()}`
-  )
+  const bookingResponse = await proxyApi(`/bookings/${bookingId}`)
 
   if (!bookingResponse.ok) {
     const data = await bookingResponse.json().catch(() => ({}))

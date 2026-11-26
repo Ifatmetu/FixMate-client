@@ -23,9 +23,7 @@ export async function GET() {
 
   if (guard.error) return guard.error
 
-  const query = new URLSearchParams({ customerId: guard.user.id })
-
-  return proxyApi(`/bookings?${query.toString()}`)
+  return proxyApi("/bookings")
 }
 
 export async function POST(request: Request) {
@@ -83,7 +81,6 @@ export async function POST(request: Request) {
     servicePrice: Number(service.price) || 0,
     technicianId: service.technicianId ?? null,
     technicianName: service.technicianName ?? "",
-    customerId: guard.user.id,
     customerName,
     customerEmail,
     phone: asText(body?.phone),

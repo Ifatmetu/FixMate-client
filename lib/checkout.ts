@@ -13,9 +13,12 @@ export async function fulfillPaidBooking(
   customerId: string,
   stripeDetails?: { sessionId?: string; paymentIntentId?: string }
 ): Promise<FulfillResult> {
-  const response = await proxyApi(`/bookings/${bookingId}/pay`, {
+  const response = await proxyApi(`/internal/bookings/${bookingId}/pay`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-fixmate-service-token": process.env.FIXMATE_SERVICE_TOKEN ?? "",
+    },
     body: JSON.stringify({
       customerId,
       stripeSessionId: stripeDetails?.sessionId ?? null,
