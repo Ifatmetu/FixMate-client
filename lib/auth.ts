@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth"
 import { mongodbAdapter } from "@better-auth/mongo-adapter"
-import { MongoClient } from "mongodb"
+import { MongoClient, type CollectionOptions, type Db } from "mongodb"
 import { admin } from "better-auth/plugins"
 
 const mongoUrl = process.env.BETTER_AUTH_DB_URL
@@ -8,6 +8,8 @@ const mongoUrl = process.env.BETTER_AUTH_DB_URL
 if (!mongoUrl) {
   throw new Error("BETTER_AUTH_DB_URL is not defined")
 }
+
+const mongoUri: string = mongoUrl
 
 const baseURL =
   process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_BETTER_AUTH_URL
@@ -29,8 +31,9 @@ const localOrigins =
 const mongoOptions = {
   maxPoolSize: 10,
   minPoolSize: 0,
-  maxIdleTimeMS: 15000,
-  serverSelectionTimeoutMS: 5000,
+  maxIdleTimeMS: 60000,
+  connectTimeoutMS: 10000,
+  serverSelectionTimeoutMS: 30000,
   socketTimeoutMS: 45000,
 }
 
@@ -38,13 +41,32 @@ declare global {
   var _mongoAuthClient: MongoClient | undefined
 }
 
-if (!globalThis._mongoAuthClient) {
-  globalThis._mongoAuthClient = new MongoClient(mongoUrl, mongoOptions)
+function getMongoClient() {
+  if (!globalThis._mongoAuthClient) {
+    const client = new MongoClient(mongoUri, mongoOptions)
+
+    // A failed initial connection closes the driver's topology. Dropping the
+    // cached client here lets the next request connect with a fresh one
+    // instead of reusing a permanently closed topology.
+    client.on("topologyClosed", () => {
+      if (globalThis._mongoAuthClient === client) {
+        globalThis._mongoAuthClient = undefined
+      }
+    })
+
+    globalThis._mongoAuthClient = client
+  }
+
+  return globalThis._mongoAuthClient
 }
 
-const client = globalThis._mongoAuthClient
-
-const db = client.db("FixMate")
+// Better Auth captures this object when `auth` is created. Resolve the client
+// per operation so a closed topology from a previous invocation is never used.
+const db = {
+  collection(name: string, options?: CollectionOptions) {
+    return getMongoClient().db("FixMate").collection(name, options)
+  },
+} as unknown as Db
 
 const signupRoles = ["customer", "technician"] as const
 
